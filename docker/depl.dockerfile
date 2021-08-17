@@ -1,6 +1,8 @@
+# Run from project root directory
+
 ARG VERSION="0.0.1-SNAPSHOT"
 
-FROM maven:latest as dependencies
+FROM maven:3-openjdk-11-slim as dependencies
 
 WORKDIR /usr/share/app
 COPY pom.xml .
@@ -13,13 +15,11 @@ COPY pom.xml .
 COPY src src
 RUN mvn clean package -Dmaven.test.skip=true
 
-FROM openjdk:14-slim-buster
+
+FROM openjdk:11-jre-slim-buster
 
 ARG VERSION
-ENV JAR="calc-${VERSION}-fat.jar"
+ENV JAR="io.iudx.calculator-cluster-${VERSION}-fat.jar"
 
 WORKDIR /usr/share/app
-COPY --from=builder /usr/share/app/target/${JAR} .
-COPY launch-scripts/divider-service.sh launch.sh
-
-ENTRYPOINT ["./launch.sh"]
+COPY --from=builder /usr/share/app/target/${JAR} ./fatjar.jar

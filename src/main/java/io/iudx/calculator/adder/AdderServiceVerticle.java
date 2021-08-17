@@ -1,25 +1,25 @@
 
-package io.srinskit.divider;
-
+package io.iudx.calculator.adder;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.serviceproxy.ServiceBinder;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 
-public class DividerServiceVerticle extends AbstractVerticle {
+public class AdderServiceVerticle extends AbstractVerticle {
 	ServiceBinder binder;
-	DividerServiceImpl service;
+	AdderServiceImpl service;
 	MessageConsumer<JsonObject> consumer;
 
 	@Override
 	public void start() {
 		binder = new ServiceBinder(vertx);
-		service = new DividerServiceImpl(vertx);
-		consumer = new ServiceBinder(vertx).setAddress("divider-service-address").register(DividerService.class, service);
+		service = new AdderServiceImpl(vertx);
+		consumer = new ServiceBinder(vertx).setAddress("adder-service-address").register(AdderService.class, service);
 	}
 
 	@Override
 	public void stop() {
 		binder.unregister(consumer);
+		System.out.println("adder verticle stopped");
 	}
 }

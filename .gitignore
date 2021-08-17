@@ -2,3 +2,6 @@
 target
 data
 *.log
+secrets/
+!secrets/.gitkeep
+docker-compose.temp.yml

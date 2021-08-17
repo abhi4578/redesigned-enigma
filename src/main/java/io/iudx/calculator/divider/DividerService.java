@@ -1,4 +1,4 @@
-package io.srinskit.divider;
+package io.iudx.calculator.divider;
 
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;

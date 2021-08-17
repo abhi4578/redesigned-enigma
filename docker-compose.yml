@@ -1,0 +1,23 @@
+version: '3.7'
+services:
+  calc:
+    env_file:
+      - ./.calc.env
+    volumes:
+      - type: volume
+        source: data-volume
+        target: /data/
+        volume:
+          nocopy: true
+    restart: always
+    logging:
+       driver: "json-file"
+       options:
+          max-file: "3"
+          max-size: "5m"
+    command: bash -c "exec java $$CALC_JAVA_OPTS -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.Log4j2LogDelegateFactory -jar ./fatjar.jar  --host $$(hostname) -c secrets/all-verticles-configs/config.json"
+
+volumes:
+  data-volume:
+    # external: true
+

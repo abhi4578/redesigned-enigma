@@ -1,4 +1,4 @@
-package io.srinskit.adder;
+package io.iudx.calculator.adder;
 
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;

@@ -1,0 +1,3 @@
+CALC_URL=https://localhost
+LOG_LEVEL=DEBUG
+CALC_JAVA_OPTS=-Xmx1024m 

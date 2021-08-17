@@ -1,0 +1,17 @@
+{
+	"version": "1.0",
+	"modules": [
+		{
+			"id": "io.iudx.calculator.adder.AdderServiceVerticle",
+			"verticleInstances": 1
+		},
+		{
+			"id": "io.iudx.calculator.apiserver.APIServerVerticle",
+			"verticleInstances": 1
+		},
+		{
+			"id": "io.iudx.calculator.divider.DividerServiceVerticle",
+			"verticleInstances": 1
+		}
+	]
+}
