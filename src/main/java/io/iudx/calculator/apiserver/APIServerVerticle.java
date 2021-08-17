@@ -1,16 +1,11 @@
-package io.srinskit.apiserver;
-
-import io.srinskit.adder.AdderService;
-import io.srinskit.divider.DividerService;
+package io.iudx.calculator.apiserver;
+import io.iudx.calculator.adder.AdderService;
+import io.iudx.calculator.divider.DividerService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.ext.web.Router;
 import io.vertx.core.http.HttpServerResponse;
 import java.io.*;
 
-import io.vertx.micrometer.Label;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.config.MeterFilter;
-import io.vertx.micrometer.backends.BackendRegistries;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,7 +17,6 @@ import org.apache.logging.log4j.Logger;
 public class APIServerVerticle extends AbstractVerticle {
 	static String historyFileName = "/data/api-server-history.txt";
 	private static final Logger LOGGER = LogManager.getLogger(APIServerVerticle.class);
-	private MeterRegistry registry = BackendRegistries.getDefaultNow();
 	@Override
 	public void start() {
 		// LOGGER.fatal("API server verticle deployed");
@@ -31,20 +25,6 @@ public class APIServerVerticle extends AbstractVerticle {
 		
 		Pattern addpattern = Pattern.compile("/add/.*/.*");
 		Pattern divpattern = Pattern.compile("/divide/.*/.*");
-		registry.config().meterFilter(
-  		MeterFilter.replaceTagValues(Label.HTTP_PATH.toString(), actualPath -> {
-    	Matcher m = addpattern.matcher(actualPath);
-   		if (m.matches()) {
-      		return "/add/:x/:y/";
-    	}
-    		return actualPath;
-  		}, "")).meterFilter(MeterFilter.replaceTagValues(Label.HTTP_PATH.toString(), actualPath -> {
-			Matcher m = divpattern.matcher(actualPath);
-			   if (m.matches()) {
-				  return "/divide/:x/:y/";
-			}
-				return actualPath;
-			  }, ""));
 		
 		router.route("/add/:x/:y/").handler(routingContext -> {
 			

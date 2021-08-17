@@ -2,19 +2,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>io.srinskit</groupId>
-  <artifactId>calc</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <groupId>io.iudx.calculator</groupId>
+	<artifactId>io.iudx.calculator</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>io-iudx-calculator</name>
 
   <properties>
     <vertx.version>3.9.0</vertx.version>
     <hazelcast.version>3.6.3</hazelcast.version>
     <micrometer.version>1.5.2</micrometer.version>
     <curator.version>4.0.1</curator.version>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <openjdk.version>11</openjdk.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <exec.mainClass>io.srinskit.deployers.CLIDeployer</exec.mainClass>
+		<exec.mainClass>io.iudx.calculator.deploy.Deployer</exec.mainClass>
+		<exec.mainClassDev>io.iudx.calculator.deploy.DeployerDev</exec.mainClassDev>
+   <config-dev.file>config-dev.json</config-dev.file>
+
   </properties>
 
   <dependencies>
@@ -118,55 +121,116 @@
     java -jar
     -->
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>2.3</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <manifestEntries>
-                    <Main-Class>${exec.mainClass}</Main-Class>
-                  </manifestEntries>
-                </transformer>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                  <resource>META-INF/services/io.vertx.core.spi.VerticleFactory</resource>
-                </transformer>
-              </transformers>
-              <artifactSet></artifactSet>
-              <outputFile>${project.build.directory}/${project.artifactId}-${project.version}-fat.jar</outputFile>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.4.0</version>
-        <executions>
-          <execution>
-            <!-- run the application using the fat jar -->
-            <id>run-app</id>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <executable>java</executable>
-              <arguments>
-                <argument>-jar</argument>
-                <argument>target/${project.artifactId}-${project.version}-fat.jar</argument>
-              </arguments>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
+      	<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.2.1</version>
+				<executions>
+					<execution>
+						<id>dev</id>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>module-info.class</exclude>
+										<exclude>META-INF/maven/**</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.SF</exclude>
+									</excludes>
+								</filter>
+							</filters>
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<manifestEntries>
+										<Main-Class>${exec.mainClassDev}</Main-Class>
+									</manifestEntries>
+								</transformer>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/services/io.vertx.core.spi.VerticleFactory
+									</resource>
+								</transformer>
+							</transformers>
+							<artifactSet></artifactSet>
+							<outputFile>${project.build.directory}/${project.artifactId}-dev-${project.version}-fat.jar
+							</outputFile>
+						</configuration>
+					</execution>
+					<execution>
+						<id>cluster</id>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>module-info.class</exclude>
+										<exclude>META-INF/maven/**</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.SF</exclude>
+									</excludes>
+								</filter>
+							</filters>
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<manifestEntries>
+										<Main-Class>${exec.mainClass}</Main-Class>
+									</manifestEntries>
+								</transformer>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/services/io.vertx.core.spi.VerticleFactory
+									</resource>
+								</transformer>
+							</transformers>
+							<artifactSet></artifactSet>
+							<outputFile>${project.build.directory}/${project.artifactId}-cluster-${project.version}-fat.jar
+							</outputFile>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<source>${openjdk.version}</source>
+					<target>${openjdk.version}</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<id>calc</id>
+						<configuration>
+							<mainClass>io.iudx.calculator.deploy.DeployerDev</mainClass>
+							<arguments>
+								<argument>-jar</argument>
+								<argument>{project.build.directory}/${project.artifactId}-dev-${project.version}-fat.jar
+								</argument>
+								<argument>-c</argument>
+								<argument>./secrets/all-verticles-configs/${config-dev.file}</argument>
+							</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>
