@@ -1,0 +1,13 @@
+{
+	"version": "1.0",
+	"zookeepers": [
+		"zookeeper"
+	],
+	"clusterId": "io-iudx-calculator",
+        "modules": [
+                {
+                        "id": "io.iudx.calculator.adder.AdderServiceVerticle",
+                        "verticleInstances": 1
+                }
+        ]
+}

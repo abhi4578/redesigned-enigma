@@ -1,0 +1,14 @@
+{
+	"version": "1.0",
+	"zookeepers": [
+		"zookeeper"
+	],
+	"clusterId": "io-iudx-calculator",
+        "modules": [
+                {
+                        "id": "io.iudx.calculator.divider.DividerServiceVerticle",
+                        "verticleInstances": 1
+                }
+        ]
+
+}
