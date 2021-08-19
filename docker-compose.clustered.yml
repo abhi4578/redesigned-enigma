@@ -1,0 +1,65 @@
+version: '2.4'
+networks:
+  calc-net:
+    driver: bridge
+services:
+  calc-api:
+    image: iudx/calc-depl:latest
+    volumes:
+      - ./secrets/one-verticle-configs/config-api.json:/usr/share/app/secrets/one-verticle-configs/config.json
+      - type: volume
+        source: data-volume
+        target: /data/
+        volume:
+          nocopy: true  
+    ports:
+      - "8080:8080"
+      - "9000:9000"
+    networks: 
+      - calc-net
+    env_file:
+      - ./.calc.env
+    restart: always
+    depends_on: 
+      - "zookeeper"
+    command: bash -c "exec java $$CALC_JAVA_OPTS -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.Log4j2LogDelegateFactory -jar ./fatjar.jar  --host $$(hostname) -c secrets/one-verticle-configs/config.json"
+
+  calc-adder:
+    image: iudx/calc-depl:latest
+    volumes:
+      - ./secrets/one-verticle-configs/config-adder.json:/usr/share/app/secrets/one-verticle-configs/config.json
+    networks: 
+      - calc-net
+    env_file:
+      - ./.calc.env
+    restart: always
+    scale: 1
+    depends_on: 
+      - "zookeeper"
+    command: bash -c "exec java $$CALC_JAVA_OPTS -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.Log4j2LogDelegateFactory -jar ./fatjar.jar  --host $$(hostname) -c secrets/one-verticle-configs/config.json"
+  
+
+  calc-divider:
+    image: iudx/calc-depl:latest
+    volumes:
+      - ./secrets/one-verticle-configs/config-divider.json:/usr/share/app/secrets/one-verticle-configs/config.json
+    networks: 
+      - calc-net
+    env_file:
+      - ./.calc.env
+    restart: always
+    scale: 1
+    depends_on: 
+      - "zookeeper"
+    command: bash -c "exec java $$CALC_JAVA_OPTS -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.Log4j2LogDelegateFactory -jar ./fatjar.jar  --host $$(hostname) -c secrets/one-verticle-configs/config.json"
+  
+  zookeeper:
+    image: zookeeper:latest
+    expose:
+      - "2181"
+    networks:
+      - calc-net
+
+volumes:
+  data-volume:
+  
