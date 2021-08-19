@@ -35,7 +35,7 @@
          ```sh 
          # Command to bring up the non-clustered calc container
          docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-         # Command to bring down the non-clustered latest-ingestion-pipeline container
+         # Command to bring down the non-clustered calc container
          docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
          ```
    2. Clustered setup with all verticles running in a single container: 

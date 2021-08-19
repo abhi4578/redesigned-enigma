@@ -8,10 +8,8 @@
 	<name>io-iudx-calculator</name>
 
   <properties>
-    <vertx.version>3.9.0</vertx.version>
-    <hazelcast.version>3.6.3</hazelcast.version>
+    <vertx.version>3.9.8</vertx.version>
     <micrometer.version>1.5.2</micrometer.version>
-    <curator.version>4.0.1</curator.version>
     <openjdk.version>11</openjdk.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<exec.mainClass>io.iudx.calculator.deploy.Deployer</exec.mainClass>
@@ -47,21 +45,11 @@
       <artifactId>vertx-service-proxy</artifactId>
       <version>${vertx.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-x-discovery</artifactId>
-      <version>${curator.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-hazelcast</artifactId>
-      <version>${vertx.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.hazelcast</groupId>
-      <artifactId>hazelcast-zookeeper</artifactId>
-      <version>${hazelcast.version}</version>
-    </dependency>
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-zookeeper</artifactId>
+			<version>${vertx.version}</version>
+		</dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-micrometer-metrics</artifactId>

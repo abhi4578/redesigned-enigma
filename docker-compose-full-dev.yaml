@@ -11,7 +11,7 @@ services:
         source: data-volume
         target: /data/
         volume:
-          nocopy: true
+          nocopy: true  
     ports:
       - "8080:8080"
     networks: 
@@ -28,3 +28,4 @@ services:
 
 volumes:
   data-volume:
+  

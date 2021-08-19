@@ -1,42 +1,47 @@
 package io.iudx.calculator.deploy;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Arrays;
+import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import java.util.EnumSet;
+
+
+import io.vertx.core.eventbus.EventBusOptions;
+import io.vertx.core.spi.cluster.ClusterManager;
+import io.vertx.spi.cluster.zookeeper.ZookeeperClusterManager;
+
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.cli.CLI;
+import io.vertx.core.cli.Option;
+import io.vertx.core.cli.CommandLine;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.DeploymentOptions;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.LoggerContext;
-import com.hazelcast.config.Config;
-import com.hazelcast.config.DiscoveryStrategyConfig;
-import com.hazelcast.zookeeper.ZookeeperDiscoveryProperties;
-import com.hazelcast.zookeeper.ZookeeperDiscoveryStrategyFactory;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+
+import io.vertx.core.metrics.MetricsOptions;
+import io.vertx.micrometer.VertxPrometheusOptions;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.Label;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.vertx.micrometer.backends.BackendRegistries;
+// JVM metrics imports
+
+import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
-import io.vertx.core.cli.CLI;
-import io.vertx.core.cli.CommandLine;
-import io.vertx.core.cli.Option;
-import io.vertx.core.eventbus.EventBusOptions;
-import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.metrics.MetricsOptions;
-import io.vertx.core.spi.cluster.ClusterManager;
-import io.vertx.micrometer.Label;
-import io.vertx.micrometer.MicrometerMetricsOptions;
-import io.vertx.micrometer.VertxPrometheusOptions;
-import io.vertx.micrometer.backends.BackendRegistries;
-import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 
 public class Deployer {
   private static final Logger LOGGER = LogManager.getLogger(Deployer.class);
@@ -64,43 +69,27 @@ public class Deployer {
       }
     });
   }
-
-  public static ClusterManager getClusterManager(String host,
-                                                  List<String> zookeepers,
-                                                  String clusterID) {
-    Config config = new Config();
-    config.getNetworkConfig().getJoin().getMulticastConfig().setEnabled(false);
-    config.getNetworkConfig().setPublicAddress(host);
-    config.setProperty("hazelcast.discovery.enabled", "true");
-    config.setProperty("hazelcast.logging.type", "log4j2");
-    DiscoveryStrategyConfig discoveryStrategyConfig =
-        new DiscoveryStrategyConfig(new ZookeeperDiscoveryStrategyFactory());
-    discoveryStrategyConfig.addProperty(ZookeeperDiscoveryProperties.ZOOKEEPER_URL.key(),
-                                          String.join(",", zookeepers));
-    discoveryStrategyConfig.addProperty(ZookeeperDiscoveryProperties.GROUP.key(), clusterID);
-    config.getNetworkConfig()
-          .getJoin()
-          .getDiscoveryConfig()
-          .addDiscoveryStrategyConfig(discoveryStrategyConfig);
-
-    return new HazelcastClusterManager(config);
-  }
+	public static ClusterManager getClusterManager(List<String> zookeepers, String clusterId) {
+      JsonObject zkConfig = new JsonObject();
+      zkConfig.put("zookeeperHosts", String.join(",", zookeepers));
+      zkConfig.put("rootPath", clusterId);
+      return new ZookeeperClusterManager(zkConfig);
+	}
 
   public static MetricsOptions getMetricsOptions() {
     return new MicrometerMetricsOptions()
         .setPrometheusOptions(
-            new VertxPrometheusOptions()
-              .setEnabled(true)
-              .setStartEmbeddedServer(true)
-              .setEmbeddedServerOptions(new HttpServerOptions().setPort(9000)))
+            new VertxPrometheusOptions().setEnabled(true).setStartEmbeddedServer(true)
+                .setEmbeddedServerOptions(new HttpServerOptions().setPort(9000)))
         // .setPublishQuantiles(true))
-              .setLabels(EnumSet.of(Label.EB_ADDRESS, Label.EB_FAILURE, Label.HTTP_CODE,
-                    Label.HTTP_METHOD, Label.HTTP_PATH))
-              .setEnabled(true);
+        .setLabels(EnumSet.of(Label.EB_ADDRESS, Label.EB_FAILURE, Label.HTTP_CODE,
+            Label.HTTP_METHOD))
+        .setEnabled(true);
   }
 
   public static void setJVMmetrics() {
     MeterRegistry registry = BackendRegistries.getDefaultNow();
+    new ClassLoaderMetrics().bindTo(registry);
     new JvmMemoryMetrics().bindTo(registry);
     new JvmGcMetrics().bindTo(registry);
     new ProcessorMetrics().bindTo(registry);
@@ -123,7 +112,7 @@ public class Deployer {
     JsonObject configuration = new JsonObject(config);
     List<String> zookeepers = configuration.getJsonArray("zookeepers").getList();
     String clusterId = configuration.getString("clusterId");
-    mgr = getClusterManager(host, zookeepers, clusterId);
+    mgr = getClusterManager(zookeepers, clusterId);
     EventBusOptions ebOptions = new EventBusOptions().setClustered(true).setHost(host);
     VertxOptions options = new VertxOptions().setClusterManager(mgr).setEventBusOptions(ebOptions)
         .setMetricsOptions(getMetricsOptions());
@@ -165,11 +154,11 @@ public class Deployer {
       LOGGER.info("All the verticles undeployed");
       mgr.leave(handler -> {
         if (handler.succeeded()) {
-          LOGGER.info("Hazelcast succesfully left:");
+          LOGGER.info("Zookeeper client succesfully left:");
           latch_cluster.countDown();
 
         } else {
-          LOGGER.warn("Error while hazelcast leaving, reason:" + handler.cause());
+          LOGGER.warn("Error while Zookeeper client leaving, reason:" + handler.cause());
         }
       });
     } catch (Exception e) {
@@ -193,7 +182,7 @@ public class Deployer {
     try {
       latch_vertx.await(5, TimeUnit.SECONDS);
       // then shut down log4j
-      if (LogManager.getContext() instanceof LoggerContext) {
+      if( LogManager.getContext() instanceof LoggerContext ) {
         LOGGER.debug("Shutting down log4j2");
         LogManager.shutdown((LoggerContext) LogManager.getContext());
       } else
@@ -204,13 +193,13 @@ public class Deployer {
   }
 
   public static void main(String[] args) {
-    CLI cli = CLI.create("IUDX Callculator")
-        .setSummary("A CLI to deploy the calculator")
-        .addOption(new Option().setLongName("help").setShortName("h").setFlag(true).setDescription("display help"))
-        .addOption(new Option().setLongName("config").setShortName("c").setRequired(true)
-            .setDescription("configuration file"))
+    CLI cli = CLI.create("IUDX calculator").setSummary("A CLI to deploy the calculator")
+        .addOption(new Option().setLongName("help").setShortName("h").setFlag(true)
+            .setDescription("display help"))
+        .addOption(new Option().setLongName("config").setShortName("c")
+            .setRequired(true).setDescription("configuration file"))
         .addOption(new Option().setLongName("host").setShortName("i").setRequired(true)
-            .setDescription("public host"));
+            .setDescription("public host"));;
 
     StringBuilder usageString = new StringBuilder();
     cli.usage(usageString);
@@ -218,7 +207,7 @@ public class Deployer {
     if (commandLine.isValid() && !commandLine.isFlagEnabled("help")) {
       String configPath = commandLine.getOptionValue("config");
       String host = commandLine.getOptionValue("host");
-      deploy(configPath, host);
+      deploy(configPath,host);
       Runtime.getRuntime().addShutdownHook(new Thread(() -> gracefulShutdown()));
     } else {
       LOGGER.info(usageString);
