@@ -69,3 +69,10 @@
    ```sh
    mvn clean compile  exec:java@calc -Dconfig-dev.file=config-x.json
    ```
+   
+## Contributing
+We follow Git Merge based workflow 
+1. Fork this repo
+2. Create a new feature branch in your fork. Multiple features must have a hyphen separated name, or refer to a milestone name as mentioned in Github -> Projects 
+3. Commit to your fork and raise a Pull Request with upstream
+
