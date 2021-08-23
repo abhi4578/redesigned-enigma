@@ -10,3 +10,13 @@ services:
       - ./secrets/all-verticles-configs/config-depl.json:/usr/share/app/secrets/all-verticles-configs/config.json
     networks: 
       - overlay-net
+    depends_on: 
+      - "zookeeper"
+  
+  zookeeper:
+    image: zookeeper:latest
+    expose:
+      - "2181"
+    networks:
+      - overlay-net
+
