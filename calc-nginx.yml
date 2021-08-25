@@ -1,0 +1,44 @@
+version: "3.4"
+
+networks:
+  overlay-net:
+    external: true
+    driver: overlay
+
+services:
+  calc-nginx:
+    image: nginx:1.19 
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - "node.labels.calc_nginx_node==true"
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        window: 10s
+    ports:
+      - target: 443
+        published: 443
+        mode: host
+    secrets:
+      - source: calc-key
+        target: /etc/ssl/calc-key
+      - source: calc-cert
+        target: /etc/ssl/calc-cert
+    configs:
+      - source: calc-conf
+        target: /etc/nginx/templates/nginx.conf.template
+    networks:
+      - overlay-net
+    env_file:
+      - ./.calc-nginx.env
+
+configs:
+  calc-conf:
+    file: nginx-conf/calc.conf
+secrets:
+  calc-key:
+    file: secrets/calc-key
+  calc-cert:
+    file: secrets/calc-cert

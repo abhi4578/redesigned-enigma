@@ -1,0 +1,35 @@
+version: "3.4"
+
+networks:
+  overlay-net:
+    external: true
+    driver: overlay
+
+services:
+  calc:
+    image: iudx/calc-depl:latest
+    networks:
+      - overlay-net
+    volumes:
+      - type: volume
+        source: data-volume
+        target: /data/
+    secrets:
+      - source: config-depl
+        target: /usr/share/app/secrets/all-verticles-configs/config.json
+    environment:
+      - LOG_LEVEL=INFO
+      - CALC_URL=https://localhost
+    command: bash -c "exec java $$CALC_JAVA_OPTS -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.Log4j2LogDelegateFactory -jar ./fatjar.jar  --host $$(hostname) -c secrets/all-verticles-configs/config.json"
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        window: 10s
+secrets:
+  config-depl:
+    file:  ./secrets/all-verticles-configs/config-depl.json
+   
+volumes:
+  data-volume:
