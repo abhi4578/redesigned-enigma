@@ -105,6 +105,7 @@ public class APIServerVerticle extends AbstractVerticle {
 			try {
 				FileWriter fileWriter = new FileWriter(historyFileName);
 				fileWriter.close();
+				LOGGER.info("Succesfully written to the file " + historyFileName);
 			} catch (IOException ex) {
 				reply = "ERROR: " + ex.getMessage();
 				LOGGER.error("Error writing to history file at /history"+ex.toString());

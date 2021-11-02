@@ -6,11 +6,6 @@ FROM maven:3-openjdk-11-slim as dependencies
 WORKDIR /usr/share/app
 COPY pom.xml .
 RUN mvn clean package
-
-FROM dependencies as builder
-
-WORKDIR /usr/share/app
-COPY pom.xml .
 COPY src src
 RUN mvn clean package -Dmaven.test.skip=true
 
